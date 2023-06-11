@@ -1,23 +1,26 @@
 package com.example.project0.controller;
-
+import com.example.project0.model.Theme;
 import com.example.project0.model.Tutorial;
+import com.example.project0.repositries.IThemeRepository;
 import com.example.project0.repositries.ITutorialRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 
-@CrossOrigin(origins = "http://localhost:8081")
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api")
 public class TutorialController {
     @Autowired
     ITutorialRepository tutorialRepository;
+
+    @Autowired
+    private IThemeRepository themeRepository;
+
     @GetMapping("/tutorials")
     public ResponseEntity<List<Tutorial>> getAllTutorials(@RequestParam(required = false) String title) {
         try {
@@ -109,4 +112,117 @@ public class TutorialController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+
+    @PostMapping("/tutorials/{tutorialId}/themes/{idTheme}")
+    public Tutorial AssignThemetoTutorial(@PathVariable(value = "tutorialId") Long tutorialId, @PathVariable(value = "idTheme") Long themeId) {
+        try {
+            Tutorial tuto = tutorialRepository.findById(tutorialId).orElse(null);
+            Theme theme = themeRepository.findById(themeId).orElse(null);
+            if (tuto != null && theme != null) {
+                tuto.getThemes().add(theme);
+                theme.getTutorials().add(tuto);
+                return tutorialRepository.save(tuto);
+            } else {
+                // Handle the case where either the tutorial or theme is not found
+                throw new IllegalArgumentException("Tutorial or Theme not found");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    @GetMapping("/tutorialss/{tutorialId}")
+    public Tutorial FindThemetoTutorial(@PathVariable(value = "tutorialId") Long tutorialId) {
+        try {
+
+            return tutorialRepository.findById(tutorialId).get();
+        } catch (Exception e) {
+            throw new RuntimeException(("tutorial introvable avec l id " + tutorialId));
+        }
+    }
+
+    @PutMapping("/update/{tutorialId}")
+    public Tutorial updateTuto(@PathVariable(value = "tutorialId") Long tutorialId, @RequestBody Set<Theme> listTheme) {
+        try {
+
+            Tutorial t = tutorialRepository.findById(tutorialId).get();
+            t.setThemes(listTheme);
+
+            return tutorialRepository.save(t);
+        } catch (Exception e) {
+            throw new RuntimeException(("tutorial introvable avec l id " + tutorialId));
+        }
+    }
+
+
+
+/*@PostMapping("/add/{tutorialId}")
+  public Tutorial addTutorial(@PathVariable(value = "tutorialId") Long tutorialId, @RequestBody Set<Theme> listTheme) {
+      try {
+          Tutorial t = tutorialRepository.findById(tutorialId).orElseThrow(() -> new RuntimeException("Tutorial introuvable avec l'ID " + tutorialId));
+          t.setThemes(listTheme);
+          return tutorialRepository.save(t);
+      } catch (Exception e) {
+          throw new RuntimeException("Tutorial introuvable avec l'ID " + tutorialId, e);
+      }
+  }*/
+
+
+    // @PostMapping("/add/{tutorialId}")
+   /* public Tutorial addTutorial(@PathVariable(value = "tutorialId") Long tutorialId, @RequestBody Set<Theme> listTheme) {
+        try {
+            Tutorial t = tutorialRepository.findById(tutorialId).orElseThrow(() -> new RuntimeException("Tutorial introuvable avec l'ID " + tutorialId));
+
+            // Supprimer les thèmes existants pour éviter les doublons
+            t.getThemes().clear();
+
+            // Ajouter les nouveaux thèmes
+            for (Theme theme : listTheme) {
+                t.addTheme(theme);
+            }
+
+            return tutorialRepository.save(t);
+        } catch (Exception e) {
+            throw new RuntimeException("Tutorial introuvable avec l'ID " + tutorialId, e);
+        }
+    }*/
+
+
+
+  /*  @PostMapping("/add/{idTheme}")
+    public Tutorial addTutorial(Tutorial tutorial, Long idTheme) {
+        try {
+            Theme theme = themeRepository.findById(idTheme)
+                    .orElseThrow(() -> new RuntimeException("Post introuvable avec l'ID " + idTheme));
+
+            tutorial.getThemes().add(theme);
+            Tutorial savedTutorial = tutorialRepository.save(tutorial);
+            return savedTutorial;
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }*/
+
+
+    @PostMapping("/add/{idTheme}")
+    public Tutorial addTutorial(@RequestBody Tutorial tutorial, @PathVariable Long idTheme) {
+        try {
+            Theme theme = themeRepository.findById(idTheme)
+                    .orElseThrow(() -> new RuntimeException("Thème introuvable avec l'ID " + idTheme));
+
+            Set<Theme> themes = new HashSet<>();
+            themes.add(theme);
+            tutorial.setThemes(themes);
+
+            Tutorial savedTutorial = tutorialRepository.save(tutorial);
+            return savedTutorial;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 }
