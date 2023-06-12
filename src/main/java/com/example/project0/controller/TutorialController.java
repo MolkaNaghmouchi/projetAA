@@ -115,7 +115,7 @@ public class TutorialController {
 
 
     @PostMapping("/tutorials/{tutorialId}/themes/{idTheme}")
-    public Tutorial AssignThemetoTutorial(@PathVariable(value = "tutorialId") Long tutorialId, @PathVariable(value = "idTheme") Long themeId) {
+    public Tutorial UpdateThemetoTutorial(@PathVariable(value = "tutorialId") Long tutorialId, @PathVariable(value = "idTheme") Long themeId) {
         try {
             Tutorial tuto = tutorialRepository.findById(tutorialId).orElse(null);
             Theme theme = themeRepository.findById(themeId).orElse(null);
@@ -143,7 +143,7 @@ public class TutorialController {
         }
     }
 
-    @PutMapping("/update/{tutorialId}")
+  /*  @PutMapping("/update/{tutorialId}")
     public Tutorial updateTuto(@PathVariable(value = "tutorialId") Long tutorialId, @RequestBody Set<Theme> listTheme) {
         try {
 
@@ -154,7 +154,7 @@ public class TutorialController {
         } catch (Exception e) {
             throw new RuntimeException(("tutorial introvable avec l id " + tutorialId));
         }
-    }
+    }*/
 
 
 
@@ -218,6 +218,34 @@ public class TutorialController {
             tutorial.setThemes(themes);
 
             Tutorial savedTutorial = tutorialRepository.save(tutorial);
+            return savedTutorial;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+
+
+
+    @PutMapping("/update/{tutorialId}/{idTheme}")
+    public Tutorial updateTutorial(@PathVariable Long tutorialId, @RequestBody Tutorial updatedTutorial, @PathVariable Long idTheme) {
+        try {
+            Tutorial existingTutorial = tutorialRepository.findById(tutorialId)
+                    .orElseThrow(() -> new RuntimeException("Tutoriel introuvable avec l'ID " + tutorialId));
+
+            Theme theme = themeRepository.findById(idTheme)
+                    .orElseThrow(() -> new RuntimeException("Thème introuvable avec l'ID " + idTheme));
+
+            existingTutorial.setTitle(updatedTutorial.getTitle());
+            existingTutorial.setDescription(updatedTutorial.getDescription());
+            // Mettez à jour d'autres propriétés du tutoriel si nécessaire
+
+            Set<Theme> themes = new HashSet<>();
+            themes.add(theme);
+            existingTutorial.setThemes(themes);
+
+            Tutorial savedTutorial = tutorialRepository.save(existingTutorial);
             return savedTutorial;
         } catch (Exception e) {
             throw new RuntimeException(e);
